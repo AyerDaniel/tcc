@@ -544,6 +544,10 @@ def create_dataset(
     # Discover video directories for the given split.
     # Convention: root_dir/split/ or root_dir/ with a split-specific manifest.
     split_dir = os.path.join(config.root_dir, split)
+
+    # Testing
+    print(f"split_dir: {split_dir}")
+    
     if os.path.isdir(split_dir):
         root = split_dir
     else:
@@ -567,7 +571,8 @@ def create_dataset(
         batch_size=batch_size,
         shuffle=is_train,
         drop_last=is_train,
-        num_workers=4,
+        # Daniel Ayer Troubleshooting attempt.
+        num_workers=0 if os.environ.get("DATALOADER_WORKERS") is None else int(os.environ.get("DATALOADER_WORKERS")),
         pin_memory=True,
         collate_fn=_collate_fn,
     )

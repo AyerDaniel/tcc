@@ -297,6 +297,10 @@ def _build_data_config(cfg: TCCConfig) -> DataConfig:
 
 
 def train(cfg: TCCConfig) -> None:
+
+    # Testing
+    print(f"Thisn")
+    
     """Run the TCC training loop.
 
     Parameters
@@ -313,6 +317,15 @@ def train(cfg: TCCConfig) -> None:
     # Model + algo
     algo = get_algo(cfg.training_algo, cfg=cfg)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    '''
+        Demo model was lef tto train overnight but never used more than 400MB of GPU mem.
+        Process was killed.  The hunt begins.
+    '''    
+    # My troubleshooting.
+    print(device)
+
+
     algo = algo.to(device)
 
     # Optimizer + scheduler
@@ -322,6 +335,16 @@ def train(cfg: TCCConfig) -> None:
     # Dataset
     data_cfg = _build_data_config(cfg)
     train_loader = create_dataset(split="train", mode="train", config=data_cfg)
+
+    # My Troubleshooting Daniel Ayer
+    # Check for num_workers in train_loader object.
+    print(f"Train Loader has: {train_loader.num_workers} workers.")
+    print(f"DataLoader: {train_loader.__dir__()}")
+
+    if len(train_loader.dataset) == 0:
+        raise RuntimeError(
+            f"Dataset is empty. Check that frame images exist at: {data_cfg.root_dir}"
+        )
 
     # Restore checkpoint
     global_step = maybe_restore_checkpoint(logdir, algo, optimizer)
@@ -390,7 +413,7 @@ def train(cfg: TCCConfig) -> None:
 # ---------------------------------------------------------------------------
 
 
-def main() -> None:
+def main() -> None:   
     """Parse command-line arguments and launch training."""
     parser = argparse.ArgumentParser(
         description="TCC training script (PyTorch)."
